@@ -51,8 +51,7 @@ void main() {
   });
 
   test('wrapWithConsumer', () {
-    final builder =
-        (({Key? key, required int props}) => const SizedBox());
+    final builder = (({Key? key, required int props}) => const SizedBox());
     final transformer = ((Reducible<int> reducible) => 1);
     final objectUnderTest = wrapWithConsumer(
       builder: builder,

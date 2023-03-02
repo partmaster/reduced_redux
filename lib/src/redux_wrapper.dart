@@ -13,8 +13,7 @@ Widget wrapWithProvider<S>({
 }) =>
     StoreProvider(
         store: Store<S>(
-          (state, action) =>
-              action is Reducer ? action(state) : state,
+          (state, action) => action is Reducer ? action(state) : state,
           initialState: initialState,
         ),
         child: child);
