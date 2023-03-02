@@ -12,7 +12,7 @@ Widget wrapWithProvider<S>({
   required Widget child,
 }) =>
     StoreProvider(
-        store: Store(
+        store: Store<S>(
           (state, action) =>
               action is Reducer ? action(state) : state,
           initialState: initialState,
