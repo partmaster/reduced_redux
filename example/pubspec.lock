@@ -126,11 +126,10 @@ packages:
   reduced:
     dependency: "direct main"
     description:
-      path: "."
-      ref: main
-      resolved-ref: d50c4db4181e8ef4b550fa7b71ac702c9bf44387
-      url: "https://github.com/partmaster/reduced.git"
-    source: git
+      name: reduced
+      sha256: "403d266eb7c2303affe654f75942d58af2dc4a7a826e54623ea544148e2c6944"
+      url: "https://pub.dev"
+    source: hosted
     version: "0.1.0"
   reduced_redux:
     dependency: "direct main"
