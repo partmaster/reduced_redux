@@ -30,35 +30,12 @@ void main() {
     expect(objectUnderTest.state, 1);
   });
 
-  test('Store.reducible() reduce', () async {
+  test('Store.proxy() reduce', () async {
     final objectUnderTest = Store(
       (state, action) => action is Reducer ? action(state) : state,
       initialState: 0,
-    ).reducible();
+    ).proxy();
     objectUnderTest.reduce(Incrementer());
     expect(objectUnderTest.state, 1);
-  });
-
-  test('wrapWithProvider', () {
-    const child = SizedBox();
-    final objectUnderTest = wrapWithProvider(
-      initialState: 0,
-      child: child,
-    );
-    expect(objectUnderTest, isA<StoreProvider<int>>());
-    final provider = objectUnderTest as StoreProvider<int>;
-    expect(provider.child, child);
-  });
-
-  test('wrapWithConsumer', () {
-    final builder = (({Key? key, required int props}) => const SizedBox());
-    final transformer = ((Reducible<int> reducible) => 1);
-    final objectUnderTest = wrapWithConsumer(
-      builder: builder,
-      transformer: transformer,
-    );
-    expect(objectUnderTest, isA<StoreConnector<int, int>>());
-    final consumer = objectUnderTest as StoreConnector<int, int>;
-    expect(consumer.distinct, true);
   });
 }
