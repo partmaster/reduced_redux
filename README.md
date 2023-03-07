@@ -7,51 +7,67 @@
 
 Implementation of the 'reduced' API for the 'Redux' state management framework with following features:
 
-1. Support of the ```Reducible``` interface 
+1. Support of the ```ReducedStore``` interface 
 2. Register a state for management.
 3. Trigger a rebuild on widgets selectively after a state change.
 
 ## Features
 
-#### 1. Support of the ```Reducible``` interface 
+#### 1. Support of the ```ReducedStore``` interface 
 
 ```dart
-extension ReducibleStore on Store {
-  Reducible<S> reducible<S>() => ReducibleProxy(
+extension ReducedStoreOnStore on Store {
+  ReducedStore<S> proxy<S>() => ReducedStoreProxy(
         () => state,
         (reducer) => dispatch(reducer),
         this,
       );
-}```
+}
+```
 
 #### 2. Register a state for management.
 
 ```dart
-Widget wrapWithProvider<S>({
-  required S initialState,
-  required Widget child,
-}) =>
-    StoreProvider(
-        store: Store(
-          (state, action) =>
-              action is Reducer ? action(state) : state,
-          initialState: initialState,
-        ),
-        child: child);
+class ReducedProvider<S> extends StatelessWidget {
+  const ReducedProvider({
+    super.key,
+    required this.initialState,
+    required this.child,
+  });
+
+  final S initialState;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => StoreProvider(
+      store: Store<S>(
+        (state, action) => action is Reducer ? action(state) : state,
+        initialState: initialState,
+      ),
+      child: child);
+}
 ```
 
 #### 3. Trigger a rebuild on widgets selectively after a state change.
 
 ```dart
-Widget wrapWithConsumer<S, P>({
-  required ReducedTransformer<S, P> transformer,
-  required ReducedWidgetBuilder<P> builder,
-}) =>
-    StoreConnector<S, P>(
-      distinct: true,
-      converter: (store) => transformer(store.reducible<S>()),
-      builder: (context, props) => builder(props: props),
-    );
+class ReducedConsumer<S, P> extends StatelessWidget {
+  const ReducedConsumer({
+    super.key,
+    required this.transformer,
+    required this.builder,
+  });
+
+  final ReducedTransformer<S, P> transformer;
+  final ReducedWidgetBuilder<P> builder;
+
+  @override
+  Widget build(BuildContext context) => StoreConnector<S, P>(
+        distinct: true,
+        converter: (store) => transformer(store.proxy<S>()),
+        builder: (context, props) => builder(props: props),
+      );
+}
 ```
 
 ## Getting started
@@ -60,8 +76,8 @@ In the pubspec.yaml add dependencies on the package 'reduced' and on the package
 
 ```
 dependencies:
-  reduced: ^0.1.0
-  reduced_redux: ^0.1.0
+  reduced: 0.2.1
+  reduced_redux: 0.2.1
 ```
 
 Import package 'reduced' to implement the logic.
@@ -97,9 +113,9 @@ class Props {
   final Callable<void> onPressed;
 }
 
-Props transformer(Reducible<int> reducible) => Props(
-      counterText: '${reducible.state}',
-      onPressed: CallableAdapter(reducible, Incrementer()),
+Props transformer(ReducedStore<int> store) => Props(
+      counterText: '${store.state}',
+      onPressed: CallableAdapter(store, Incrementer()),
     );
 
 Widget builder({Key? key, required Props props}) => Scaffold(
@@ -138,15 +154,13 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) => wrapWithProvider(
+  Widget build(BuildContext context) => ReducedProvider(
         initialState: 0,
         child: MaterialApp(
           theme: ThemeData(primarySwatch: Colors.blue),
-          home: Builder(
-            builder: (context) => wrapWithConsumer(
-              transformer: transformer,
-              builder: builder,
-            ),
+          home: const ReducedConsumer(
+            transformer: transformer,
+            builder: builder,
           ),
         ),
       );
