@@ -8,7 +8,7 @@ extension ReducedStoreOnStore on Store {
   /// Create a ReducibleProxy for this [Store]
   ReducedStore<S> proxy<S>() => ReducedStoreProxy(
         () => state,
-        (reducer) => dispatch(reducer),
+        (event) => dispatch(event),
         this,
       );
 }

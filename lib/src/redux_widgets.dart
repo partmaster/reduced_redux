@@ -20,7 +20,7 @@ class ReducedProvider<S> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => StoreProvider(
       store: Store<S>(
-        (state, action) => action is Reducer ? action(state) : state,
+        (state, action) => action is Event ? action(state) : state,
         initialState: initialState,
       ),
       child: child);
