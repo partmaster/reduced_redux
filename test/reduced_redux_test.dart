@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:reduced/reduced.dart';
 
 import 'package:reduced_redux/reduced_redux.dart';
-import 'package:redux/redux.dart' hide Reducer;
+import 'package:redux/redux.dart';
 
 class CounterIncremented extends Event<int> {
   @override
