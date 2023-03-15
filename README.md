@@ -7,19 +7,19 @@
 
 Implementation of the 'reduced' API for the 'Redux' state management framework with following features:
 
-1. Support of the ```ReducedStore``` interface 
+1. Support of the ```Store``` interface 
 2. Register a state for management.
 3. Trigger a rebuild on widgets selectively after a state change.
 
 ## Features
 
-#### 1. Support of the ```ReducedStore``` interface 
+#### 1. Support of the ```Store``` interface 
 
 ```dart
-extension ReducedStoreOnStore on Store {
-  ReducedStore<S> proxy<S>() => ReducedStoreProxy(
+extension ReducedStoreOnStore on redux.Store {
+  reduced.Store<S> proxy<S>() => reduced.StoreProxy(
         () => state,
-        (reducer) => dispatch(reducer),
+        (event) => dispatch(event),
         this,
       );
 }
@@ -40,8 +40,8 @@ class ReducedProvider<S> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StoreProvider(
-      store: Store<S>(
-        (state, action) => action is Reducer ? action(state) : state,
+      store: redux.Store<S>(
+        (state, action) => action is Event ? action(state) : state,
         initialState: initialState,
       ),
       child: child);
@@ -54,17 +54,17 @@ class ReducedProvider<S> extends StatelessWidget {
 class ReducedConsumer<S, P> extends StatelessWidget {
   const ReducedConsumer({
     super.key,
-    required this.transformer,
+    required this.mapper,
     required this.builder,
   });
 
-  final ReducedTransformer<S, P> transformer;
-  final ReducedWidgetBuilder<P> builder;
+  final StateToPropsMapper<S, P> mapper;
+  final WidgetFromPropsBuilder<P> builder;
 
   @override
   Widget build(BuildContext context) => StoreConnector<S, P>(
         distinct: true,
-        converter: (store) => transformer(store.proxy<S>()),
+        converter: (store) => mapper(store.state, store.proxy<S>()),
         builder: (context, props) => builder(props: props),
       );
 }
@@ -76,8 +76,11 @@ In the pubspec.yaml add dependencies on the package 'reduced' and on the package
 
 ```
 dependencies:
-  reduced: 0.2.1
-  reduced_redux: 0.2.1
+  reduced: 0.4.0
+  reduced_redux: 
+    git:
+      url: https://github.com/partmaster/reduced_redux.git
+      ref: v0.4.0
 ```
 
 Import package 'reduced' to implement the logic.
@@ -101,42 +104,56 @@ Implementation of the counter demo app logic with the 'reduced' API without furt
 
 import 'package:flutter/material.dart';
 import 'package:reduced/reduced.dart';
+import 'package:reduced/callbacks.dart';
 
-class Incrementer extends Reducer<int> {
+class CounterIncremented extends Event<int> {
   @override
   int call(int state) => state + 1;
 }
 
 class Props {
-  Props({required this.counterText, required this.onPressed});
+  const Props({required this.counterText, required this.onPressed});
+
   final String counterText;
-  final Callable<void> onPressed;
+  final VoidCallable onPressed;
 }
 
-Props transformer(ReducedStore<int> store) => Props(
-      counterText: '${store.state}',
-      onPressed: CallableAdapter(store, Incrementer()),
-    );
+class PropsMapper extends Props {
+  PropsMapper(int state, EventProcessor<int> processor)
+      : super(
+          counterText: '$state',
+          onPressed: EventCarrier(processor, CounterIncremented()),
+        );
+}
 
-Widget builder({Key? key, required Props props}) => Scaffold(
-      appBar: AppBar(title: const Text('reduced_redux example')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(props.counterText),
-          ],
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key, required this.props});
+
+  final Props props;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('reduced_redux example'),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: props.onPressed,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text(
+                'You have pushed the button this many times:',
+              ),
+              Text(props.counterText),
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: props.onPressed,
+          tooltip: 'Increment',
+          child: const Icon(Icons.add),
+        ),
+      );
+}
 ```
 
 Finished counter demo app using logic.dart and 'reduced_redux' package:
@@ -159,8 +176,8 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           theme: ThemeData(primarySwatch: Colors.blue),
           home: const ReducedConsumer(
-            transformer: transformer,
-            builder: builder,
+            mapper: PropsMapper.new,
+            builder: MyHomePage.new,
           ),
         ),
       );

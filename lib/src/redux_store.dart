@@ -1,12 +1,12 @@
 // redux_store.dart
 
-import 'package:reduced/reduced.dart';
-import 'package:redux/redux.dart' hide Reducer;
+import 'package:reduced/reduced.dart' as reduced;
+import 'package:redux/redux.dart' as redux;
 
-/// Extension on class [Store] with support of the [Reducible] interface.
-extension ReducedStoreOnStore on Store {
-  /// Create a ReducibleProxy for this [Store]
-  ReducedStore<S> proxy<S>() => ReducedStoreProxy(
+/// Extension on class [redux.Store] with support of the [reduce.Store] interface.
+extension ReducedStoreOnStore on redux.Store {
+  /// Create a StoreProxy for this [redux.Store]
+  reduced.Store<S> proxy<S>() => reduced.StoreProxy(
         () => state,
         (event) => dispatch(event),
         this,

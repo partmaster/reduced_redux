@@ -2,7 +2,7 @@
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-import 'package:redux/redux.dart' hide Reducer;
+import 'package:redux/redux.dart' as redux;
 import 'package:reduced/reduced.dart';
 
 import 'redux_store.dart';
@@ -19,7 +19,7 @@ class ReducedProvider<S> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StoreProvider(
-      store: Store<S>(
+      store: redux.Store<S>(
         (state, action) => action is Event ? action(state) : state,
         initialState: initialState,
       ),
@@ -29,17 +29,17 @@ class ReducedProvider<S> extends StatelessWidget {
 class ReducedConsumer<S, P> extends StatelessWidget {
   const ReducedConsumer({
     super.key,
-    required this.transformer,
+    required this.mapper,
     required this.builder,
   });
 
-  final ReducedTransformer<S, P> transformer;
-  final ReducedWidgetBuilder<P> builder;
+  final StateToPropsMapper<S, P> mapper;
+  final WidgetFromPropsBuilder<P> builder;
 
   @override
   Widget build(BuildContext context) => StoreConnector<S, P>(
         distinct: true,
-        converter: (store) => transformer(store.proxy<S>()),
+        converter: (store) => mapper(store.state, store.proxy<S>()),
         builder: (context, props) => builder(props: props),
       );
 }
